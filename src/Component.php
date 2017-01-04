@@ -16,8 +16,11 @@ namespace MattFerris\Application;
 
 use MattFerris\Component\ComponentInterface;
 use MattFerris\Di\ContainerInterface;
-use MattFerris\Events\DispatcherInterface;
 
+/**
+ * Defines how a unit of code (i.e. library, domain, etc...) should be
+ * configured in an application.
+ */
 class Component implements ComponentInterface
 {
     /**
@@ -26,14 +29,11 @@ class Component implements ComponentInterface
     protected $container;
 
     /**
-     * @var \MattFerris\Events\DispatcherInterface The event dispatcher instance
-     */
-    protected $eventDispatcher;
-
-    /**
      * @var array List of providers to load
      */
-    protected $providers = ['Services', 'Events'];
+    protected $providers = [
+        ['\MattFerris\Di\ContainerInterface', 'Services'],
+    ];
 
     /**
      * @var array Collection of providers instances
@@ -42,15 +42,12 @@ class Component implements ComponentInterface
 
     /**
      * @param \MattFerris\Di\ContainerInterface $container The service container
-     * @param \MattFerris\Events\DispatcherInterface $dispatcher The event dispatcher
+     * @param array $providers Optional list of names of additional providers
      */
-    public function __construct(
-        ContainerInterface $container,
-        DispatcherInterface $eventDispatcher
-        )
+    public function __construct(ContainerInterface $container, array $providers = [])
     {
         $this->container = $container;
-        $this->eventDispatcher = $eventDispatcher;
+        $this->providers = array_merge($this->providers, $providers);
     }
 
     /**
@@ -64,7 +61,8 @@ class Component implements ComponentInterface
         $namespace = implode('\\', $parts);
 
         // attempt to load providers from component namespace
-        foreach ($this->providers as $provider) {
+        foreach ($this->providers as $providerSpec) {
+            list($consumer, $provider) = $providerSpec;
             $providerClass = $namespace.'\\'.$provider.'Provider';
 
             if (!class_exists($providerClass)) {
@@ -84,12 +82,18 @@ class Component implements ComponentInterface
      */
     public function load()
     {
-        if (isset($this->loadedProviders['Services'])) {
-            $this->container->register($this->loadedProviders['Services']);
-        }
+        foreach ($this->providers as $providerSpec) {
+            list($consumer, $provider) = $providerSpec;
 
-        if (isset($this->loadedProviders['Events'])) {
-            $this->eventDispatcher->register($this->loadedProviders['Events']);
+            if (strpos('\\', $consumer !== 0)) {
+                $consumer = '\\'.$consumer;
+            }
+
+            $this->container->injectMethod(
+                $this->loadedProviders[$provider],
+                'provides',
+                ['consumer' => $consumer]
+            );
         }
     }
 }
