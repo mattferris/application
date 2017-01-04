@@ -16,12 +16,13 @@ namespace MattFerris\Application;
 
 use MattFerris\Component\ComponentInterface;
 use MattFerris\Di\ContainerInterface;
+use MattFerris\Provider\ProviderInterface;
 
 /**
  * Defines how a unit of code (i.e. library, domain, etc...) should be
  * configured in an application.
  */
-class Component implements ComponentInterface
+class Component implements ComponentInterface, ProviderInterface
 {
     /**
      * @var \MattFerris\Di\ContainerInterface The service container instance
@@ -32,7 +33,10 @@ class Component implements ComponentInterface
      * @var array List of providers to load
      */
     protected $providers = [
-        ['\MattFerris\Di\ContainerInterface', 'Services'],
+        // 'Services' => [
+        //     'consumer' => '\MattFerris\Di\ContainerInterface',
+        //     'scope' => 'local'
+        //  ],
     ];
 
     /**
@@ -42,34 +46,47 @@ class Component implements ComponentInterface
 
     /**
      * @param \MattFerris\Di\ContainerInterface $container The service container
-     * @param array $providers Optional list of names of additional providers
+     * @param array $providers Optional list of additional providers
      */
     public function __construct(ContainerInterface $container, array $providers = [])
     {
         $this->container = $container;
-        $this->providers = array_merge($this->providers, $providers);
+        $this->providers = $providers;
     }
 
     /**
      * {@inheritDoc}
      */
-    public function init()
+    public function provides($consumer)
     {
+        foreach ($this->providers as $provider => $spec) {
+            if ($spec['scope'] === 'global') {
+                $consumer->addProvider($provider, $spec['consumer']);
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function init(array $providers = [])
+    {
+        $this->providers = array_merge($providers, $this->providers);
+
         // get component namespace
         $parts = explode('\\', get_class($this));
         array_pop($parts);
         $namespace = implode('\\', $parts);
 
         // attempt to load providers from component namespace
-        foreach ($this->providers as $providerSpec) {
-            list($consumer, $provider) = $providerSpec;
+        foreach (array_keys($this->providers) as $provider) {
             $providerClass = $namespace.'\\'.$provider.'Provider';
 
             if (!class_exists($providerClass)) {
                 continue;
             }
 
-            // bundles must implement \MattFerris\Provider\ProviderInterface
+            // providers must implement \MattFerris\Provider\ProviderInterface
             if (in_array('MattFerris\Provider\ProviderInterface', class_implements($providerClass))) {
                 $this->loadedProviders[$provider] =
                     $this->container->injectConstructor($providerClass);
@@ -82,8 +99,8 @@ class Component implements ComponentInterface
      */
     public function load()
     {
-        foreach ($this->providers as $providerSpec) {
-            list($consumer, $provider) = $providerSpec;
+        foreach (array_keys($this->loadedProviders) as $provider) {
+            $consumer = $this->providers[$provider]['consumer'];
 
             if (strpos('\\', $consumer !== 0)) {
                 $consumer = '\\'.$consumer;

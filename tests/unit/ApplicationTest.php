@@ -5,9 +5,29 @@ namespace MattFerris\Application\UnitTests\Application;
 use MattFerris\Application\Application;
 use MattFerris\Di\ContainerInterface;
 use MattFerris\Component\ComponentInterface;
+use MattFerris\Provider\ProviderInterface;
 
 class ApplicationTest extends \PHPUnit_Framework_TestCase
 {
+    public function testGlobalProviderRegistration()
+    {
+        $container = $this->getMock(ContainerInterface::class);
+        $component = $this->getMock(ProviderComponent::class);
+
+        $container
+            ->expects($this->once())
+            ->method('injectConstructor')
+            ->with(ProviderComponent::class, [])
+            ->willReturn($component);
+
+        $component
+            ->expects($this->once())
+            ->method('provides')
+            ->with($this->isInstanceOf(Application::class));
+
+        $app = new Application($container, [ProviderComponent::class]);
+    }
+
     public function testRunWithClosure()
     {
         $container = $this->getMock(ContainerInterface::class);
@@ -71,6 +91,13 @@ class Foo
 
 class Component implements ComponentInterface
 {
-    public function init() {}
+    public function init(array $providers = []) {}
     public function load() {}
+}
+
+class ProviderComponent implements ComponentInterface, ProviderInterface
+{
+    public function init(array $providers = []) {}
+    public function load() {}
+    public function provides($consumer) {}
 }
