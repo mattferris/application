@@ -17,7 +17,7 @@ namespace MattFerris\Application;
 use MattFerris\Events\EventInterface;
 use MattFerris\Component\ComponentInterface;
 
-class InitializedComponentEvent extends EventInterface
+class InitializedComponentEvent implements EventInterface
 {
     /**
      * @var \MattFerris\Component\ComponentInterface Component

@@ -17,7 +17,7 @@ namespace MattFerris\Application;
 use MattFerris\Events\EventInterface;
 use MattFerris\Component\ComponentInterface;
 
-class AddedProviderEvent extends EventInterface
+class AddedProviderEvent implements EventInterface
 {
     /**
      * @var string Provider
