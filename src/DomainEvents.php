@@ -14,6 +14,8 @@
 
 namespace MattFerris\Application;
 
-class DomainEvents extends \MattFerris\Events\DomainEvents
+use MattFerris\Events\AbstractDomainEvents;
+
+class DomainEvents extends AbstractDomainEvents
 {
 }
