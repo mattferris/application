@@ -51,7 +51,7 @@ class Component implements ComponentInterface, ProviderInterface
     public function __construct(ContainerInterface $container, array $providers = [])
     {
         $this->container = $container;
-        $this->providers = $providers;
+        $this->providers = array_merge($providers, $this->providers);
     }
 
     /**
@@ -102,7 +102,7 @@ class Component implements ComponentInterface, ProviderInterface
         foreach (array_keys($this->loadedProviders) as $provider) {
             $consumer = $this->providers[$provider]['consumer'];
 
-            if (strpos('\\', $consumer !== 0)) {
+            if (strpos($consumer, '\\') !== 0) {
                 $consumer = '\\'.$consumer;
             }
 
