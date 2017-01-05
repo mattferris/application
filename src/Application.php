@@ -60,6 +60,8 @@ class Application implements ApplicationInterface
 
         foreach ($this->components as $instance) {
             $instance->init($this->providers);
+
+            DomainEvents::dispatch(new InitializedComponentEvent($instance));
         }
     }
 
@@ -85,6 +87,8 @@ class Application implements ApplicationInterface
         }
 
         $this->providers[$providerName] = ['consumer' => $consumer, 'scope' => 'global'];
+
+        DomainEvents::dispatch(new AddedProviderEvent($providerName, $consumer));
     }
 
     /**
