@@ -15,7 +15,7 @@
         "mattferris/di": "dev-develop",
         "mattferris/events": "dev-develop",
         "mattferris/provider": "~0.3",
-        "mattferris/component": "dev-develop"
+        "mattferris/component": "^1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "~4.7"
