@@ -74,14 +74,14 @@ class Application implements ApplicationInterface
      */
     public function addProvider($providerName, $consumer)
     {
-        if (!class_exists($consumer)) {
+        if (!class_exists($consumer) && !interface_exists($consumer)) {
             throw new InvalidArgumentException(
-                'Consumer "'.$consumer.'" doesn\'t exist for provider "'.$provider.'"'
+                'Consumer "'.$consumer.'" doesn\'t exist for provider "'.$providerName.'"'
             );
         }
 
         if (isset($this->providers[$providerName])) {
-            throw DuplicateProviderException($providerName);
+            throw new DuplicateProviderException($providerName);
         }
 
         $this->providers[$providerName] = ['consumer' => $consumer, 'scope' => 'global'];

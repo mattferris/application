@@ -28,6 +28,25 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $app = new Application($container, [ProviderComponent::class]);
     }
 
+    public function testAddProvider()
+    {
+        $container = $this->getMock(ContainerInterface::class);
+        $app = new Application($container, []);
+        $app->addProvider('Foo', ContainerInterface::class);
+    }
+
+    /**
+     * @depends testAddProvider
+     * @expectedException InvalidArgumentException
+     * @expectedExceptionMesasage Consumer "MattFerris\Di\ContainterInterface" doesn't exist for provider "Services"
+     */
+    public function testAddBadProvider()
+    {
+        $container = $this->getMock(ContainerInterface::class);
+        $app = new Application($container, []);
+        $app->addProvider('Foo', 'BadProvider');
+    }
+
     public function testRunWithClosure()
     {
         $container = $this->getMock(ContainerInterface::class);
