@@ -51,7 +51,7 @@ class Component implements ComponentInterface, ProviderInterface
     public function __construct(ContainerInterface $container, array $providers = [])
     {
         $this->container = $container;
-        $this->providers = $providers;
+        $this->providers = array_merge($providers, $this->providers);
     }
 
     /**
