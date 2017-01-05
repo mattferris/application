@@ -102,7 +102,7 @@ class Component implements ComponentInterface, ProviderInterface
         foreach (array_keys($this->loadedProviders) as $provider) {
             $consumer = $this->providers[$provider]['consumer'];
 
-            if (strpos('\\', $consumer !== 0)) {
+            if (strpos($consumer, '\\') !== 0) {
                 $consumer = '\\'.$consumer;
             }
 
