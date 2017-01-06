@@ -14,8 +14,10 @@
 
 namespace MattFerris\Application;
 
+use InvalidArgumentException;
 use MattFerris\Component\ComponentInterface;
 use MattFerris\Di\ContainerInterface;
+use MattFerris\Provider\ProviderInterface;
 
 class Application implements ApplicationInterface
 {
@@ -30,6 +32,16 @@ class Application implements ApplicationInterface
     protected $container;
 
     /**
+     * @var array Global providers
+     */
+    protected $providers = [
+        'Services' => [
+            'consumer' => '\MattFerris\Di\ContainerInterface',
+            'scope' => 'global'
+        ],
+    ];
+
+    /**
      * @param \MattFerris\Di\ContainerInterface $container the service container
      * @param array An array of components
      */
@@ -39,9 +51,44 @@ class Application implements ApplicationInterface
 
         foreach ($components as $component) {
             $instance = $this->container->injectConstructor($component);
-            $instance->init();
             $this->components[$component] = $instance;
+
+            if ($instance instanceof ProviderInterface) {
+                $instance->provides($this);
+            }
         }
+
+        foreach ($this->components as $instance) {
+            $instance->init($this->providers);
+
+            DomainEvents::dispatch(new InitializedComponentEvent($instance));
+        }
+    }
+
+    /**
+     * Add global providers
+     *
+     * @param string $providerName The provider name
+     * @param string $consumer The consumer of the provider
+     * @return self
+     * @throws \InvalidArgumentException If $consumer class doesn't exist
+     * @throws DuplicateProviderException If $providerName already exists
+     */
+    public function addProvider($providerName, $consumer)
+    {
+        if (!class_exists($consumer) && !interface_exists($consumer)) {
+            throw new InvalidArgumentException(
+                'Consumer "'.$consumer.'" doesn\'t exist for provider "'.$providerName.'"'
+            );
+        }
+
+        if (isset($this->providers[$providerName])) {
+            throw new DuplicateProviderException($providerName);
+        }
+
+        $this->providers[$providerName] = ['consumer' => $consumer, 'scope' => 'global'];
+
+        DomainEvents::dispatch(new AddedProviderEvent($providerName, $consumer));
     }
 
     /**

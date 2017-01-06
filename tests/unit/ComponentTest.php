@@ -8,7 +8,7 @@ use MattFerris\Provider\ConsumerInterface;
 
 class ComponentTest extends \PHPUnit_Framework_TestCase
 {
-    public function testInit()
+    public function testInitWithConstructorProviders()
     {
         $container = $this->getMock('MattFerris\Di\Di');
         $container
@@ -16,11 +16,16 @@ class ComponentTest extends \PHPUnit_Framework_TestCase
             ->method('injectConstructor')
             ->with(ServicesProvider::class, []);
 
-        $comp = new Component($container);
+        $comp = new Component($container,[
+            'Services' => [
+                'consumer' => '\MattFerris\Di\Di',
+                'scope' => 'local'
+            ]
+        ]);
         $comp->init();
     }
 
-    public function testInitWithAdditionalProviders()
+    public function testInitWithInitProviders()
     {
         $container = $this->getMock('MattFerris\Di\ContainerInterface');
         $container
@@ -31,19 +36,25 @@ class ComponentTest extends \PHPUnit_Framework_TestCase
                 [EventsProvider::class, []]
             );
 
-        $comp = new Component($container, [
-            [EventsConsumer::class, 'Events']
+        $comp = new Component($container);
+        $comp->init([
+            'Services' => ['consumer' => '', 'scope' => 'local'],
+            'Events' => ['consumer' => '', 'scope' => 'local']
         ]);
-        $comp->init();
     }
 
     /**
-     * @depends testInit
+     * @depends testInitWithConstructorProviders
      */
     public function testLoad()
     {
         $container = $this->getMock('MattFerris\Di\Di');
-        $comp = new Component($container);
+        $comp = new Component($container, [
+            'Services' => [
+                'consumer' => '\MattFerris\Di\ContainerInterface',
+                'scope' => 'local'
+            ]
+        ]);
 
         $container
             ->expects($this->once())
