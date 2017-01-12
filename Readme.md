@@ -1,6 +1,8 @@
 Application
 ===========
 
+[![Build Status](https://travis-ci.org/mattferris/application.svg?branch=master)](https://travis-ci.org/mattferris/application)
+
 A PHP application bootstrapping framework.
 
 The framework is built on the concept of components. Each component is
