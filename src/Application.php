@@ -49,6 +49,24 @@ class Application implements ApplicationInterface
     {
         $this->container = $container;
 
+        if (isset($components[0]) && is_array($components[0])) {
+            // multiple component passes specified
+            foreach ($components as $pass) {
+                $this->doComponentPass($pass);
+            }
+        } else {
+            // only one component pass specified
+            $this->doComponentPass($components);
+        }
+    }
+
+    /**
+     * Initialize a group of components.
+     *
+     * @param array $components A array of components
+     */
+    protected function doComponentPass(array $components)
+    {
         foreach ($components as $component) {
             $instance = $this->container->injectConstructor($component);
             $this->components[$component] = $instance;

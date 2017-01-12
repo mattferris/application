@@ -99,6 +99,23 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $app = new Application($container, [ComponentInterface::class]);
         $app->run(function () {});
     }
+
+    public function testConstructWithMultipleComponentPasses()
+    {
+        $container = $this->getMock(ContainerInterface::class);
+        $container
+            ->expects($this->exactly(2))
+            ->method('injectConstructor')
+            ->withConsecutive([Component::class, []], [ProviderComponent::class, []])
+            ->will($this->onConsecutiveCalls(
+                new Component(), new ProviderComponent()
+            ));
+
+        $app = new Application($container, [
+            [ Component::class ], // pass 1
+            [ ProviderComponent::class ] // pass 2
+        ]);
+    }
 }
 
 class Foo
