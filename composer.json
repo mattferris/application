@@ -11,11 +11,16 @@
             "email": "matt@bueller.ca"
         }
     ],
+    "repositories": [
+        { "type": "vcs", "url": "https://github.com/mattferris/dependency-resolver" }
+    ],
+    "minimum-stability": "dev",
     "require": {
         "mattferris/di": "^1.0",
         "mattferris/events": "~0.4",
         "mattferris/provider": "~0.3",
-        "mattferris/component": "^1.0"
+        "mattferris/component": "^1.0",
+        "mattferris/dependency-resolver": "dev-master"
     },
     "require-dev": {
         "phpunit/phpunit": "~4.7"

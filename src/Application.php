@@ -16,8 +16,10 @@ namespace MattFerris\Application;
 
 use InvalidArgumentException;
 use MattFerris\Component\ComponentInterface;
+use MattFerris\DependencyResolver\DependencyGraph;
 use MattFerris\Di\ContainerInterface;
 use MattFerris\Provider\ProviderInterface;
+use ReflectionClass;
 
 class Application implements ApplicationInterface
 {
@@ -49,38 +51,50 @@ class Application implements ApplicationInterface
     {
         $this->container = $container;
 
-        if (isset($components[0]) && is_array($components[0])) {
-            // multiple component passes specified
-            foreach ($components as $pass) {
-                $this->doComponentPass($pass);
+        $graph = new DependencyGraph();
+
+        foreach ($components as $comp) {
+            $deps = $this->getDependencies($comp);
+            if (count($deps) > 0) {
+                $graph->addDependency($comp, $deps);
             }
-        } else {
-            // only one component pass specified
-            $this->doComponentPass($components);
+
+            foreach ($comp::providers as $name => $def) {
+                $classParts = explode('\\', $comp);
+                array_splice($classParts, 0, -1, $name);
+                $providerClass = implode('\\', $classParts);
+
+                $graph->addDependency($providerClass, [$comp]);
+                $deps = $this->getDependencies($providerClass);
+                if (count($deps) > 0) {
+                    $graph->addDependency($comp, $deps);
+                }
+            }
+        }
+
+        foreach ($graph->resolve() as $item) {
+            $instance = $container->injectConstructor($item);
+            if ($item instanceof ComponentInterface) {
+                $this->components[$item] = $instance;
+            }
         }
     }
 
     /**
-     * Initialize a group of components.
-     *
-     * @param array $components A array of components
+     * @param string $class The class to get dependencies for
      */
-    protected function doComponentPass(array $components)
+    protected function getDependencies($class)
     {
-        foreach ($components as $component) {
-            $instance = $this->container->injectConstructor($component);
-            $this->components[$component] = $instance;
-
-            if ($instance instanceof ProviderInterface) {
-                $instance->provides($this);
+        $deps = [];
+        $classRef = new ReflectionClass($class);
+        if ($classRef->getConstructor() !== null) {
+            foreach ($classRef->getConstrutor()->getParams() as $p) {
+                if ($p->hasType() && class_exists($p->getType())) {
+                    $deps[] = $p->getType();
+                }
             }
         }
-
-        foreach ($this->components as $instance) {
-            $instance->init($this->providers);
-
-            DomainEvents::dispatch(new InitializedComponentEvent($instance));
-        }
+        return $deps;
     }
 
     /**
