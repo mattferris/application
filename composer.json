@@ -18,8 +18,6 @@
     "require": {
         "mattferris/di": "^1.0",
         "mattferris/events": "~0.4",
-        "mattferris/provider": "~0.3",
-        "mattferris/component": "^1.0",
         "mattferris/dependency-resolver": "dev-master"
     },
     "require-dev": {
