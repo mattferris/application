@@ -34,14 +34,9 @@ class Application implements ApplicationInterface
     protected $container;
 
     /**
-     * @var array Global providers
+     * @var array Provider Dependencies
      */
-    protected $providers = [
-        'Services' => [
-            'consumer' => '\MattFerris\Di\ContainerInterface',
-            'scope' => 'global'
-        ],
-    ];
+    protected $dependencies = null;
 
     /**
      * @param \MattFerris\Di\ContainerInterface $container the service container
@@ -50,77 +45,25 @@ class Application implements ApplicationInterface
     public function __construct(ContainerInterface $container, array $components)
     {
         $this->container = $container;
+        $this->dependencies = new DependencyGraph();
 
-        $graph = new DependencyGraph();
+        $this->container->set('App', $this);
 
         foreach ($components as $comp) {
-            $deps = $this->getDependencies($comp);
-            if (count($deps) > 0) {
-                $graph->addDependency($comp, $deps);
-            }
-
-            foreach ($comp::providers as $name => $def) {
-                $classParts = explode('\\', $comp);
-                array_splice($classParts, 0, -1, $name);
-                $providerClass = implode('\\', $classParts);
-
-                $graph->addDependency($providerClass, [$comp]);
-                $deps = $this->getDependencies($providerClass);
-                if (count($deps) > 0) {
-                    $graph->addDependency($comp, $deps);
-                }
-            }
-        }
-
-        foreach ($graph->resolve() as $item) {
-            $instance = $container->injectConstructor($item);
-            if ($item instanceof ComponentInterface) {
-                $this->components[$item] = $instance;
-            }
+            $this->components[$comp] = $container->injectConstructor($comp);
+            $this->components[$comp]->init($this);
         }
     }
 
     /**
-     * @param string $class The class to get dependencies for
-     */
-    protected function getDependencies($class)
-    {
-        $deps = [];
-        $classRef = new ReflectionClass($class);
-        if ($classRef->getConstructor() !== null) {
-            foreach ($classRef->getConstrutor()->getParams() as $p) {
-                if ($p->hasType() && class_exists($p->getType())) {
-                    $deps[] = $p->getType();
-                }
-            }
-        }
-        return $deps;
-    }
-
-    /**
-     * Add global providers
+     * Register dependencies for a provider
      *
-     * @param string $providerName The provider name
-     * @param string $consumer The consumer of the provider
-     * @return self
-     * @throws \InvalidArgumentException If $consumer class doesn't exist
-     * @throws DuplicateProviderException If $providerName already exists
+     * @param string $class The provider class
+     * @param array $dependencies An array of dependencies
      */
-    public function addProvider($providerName, $consumer)
+    public function registerDependencies($class, array $dependencies)
     {
-        if (!class_exists($consumer) && !interface_exists($consumer)) {
-            throw new InvalidArgumentException(
-                'Consumer "'.$consumer.'" doesn\'t exist for provider "'.$providerName.'"'
-            );
-        }
-
-        if (isset($this->providers[$providerName])) {
-            throw new DuplicateProviderException($providerName);
-        }
-
-        $this->providers[$providerName] = ['consumer' => $consumer, 'scope' => 'global'];
-
-        DomainEvents::dispatch(new AddedProviderEvent($providerName, $consumer));
+        $this->dependencies->addDependency($class, $dependencies);
     }
 
     /**
@@ -128,8 +71,9 @@ class Application implements ApplicationInterface
      */
     public function run(callable $run = null)
     {
-        foreach ($this->components as $component) {
-            $component->load();
+        foreach ($this->dependencies->resolve() as $item) {
+            $object = $this->container->injectConstructor($item->getObject());
+            $object->load();
         }
 
         if (!is_null($run)) {
