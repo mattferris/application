@@ -15,10 +15,9 @@
 namespace MattFerris\Application;
 
 use InvalidArgumentException;
-use MattFerris\Component\ComponentInterface;
+use MattFerris\Application\Component\ComponentInterface;
 use MattFerris\DependencyResolver\DependencyGraph;
 use MattFerris\Di\ContainerInterface;
-use MattFerris\Provider\ProviderInterface;
 use ReflectionClass;
 
 class Application implements ApplicationInterface

@@ -12,7 +12,9 @@
  * www.bueller.ca/application/license
  */
 
-namespace MattFerris\Application;
+namespace MattFerris\Application\Component;
+
+use MattFerris\Application\Application;
 
 /**
  * Defines how a unit of code (i.e. library, domain, etc...) should be
