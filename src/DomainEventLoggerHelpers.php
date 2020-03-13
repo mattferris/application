@@ -4,7 +4,7 @@
  * application - A PHP application loader
  * www.bueller.ca/application
  *
- * DomainEvents.php
+ * DomainEventLoggerHelpers.php
  * @copyright Copyright (c) 2016 Matt Ferris
  * @author Matt Ferris <matt@bueller.ca>
  *
