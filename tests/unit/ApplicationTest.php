@@ -3,9 +3,8 @@
 namespace MattFerris\Application\UnitTests\Application;
 
 use MattFerris\Application\Application;
-use MattFerris\Application\ComponentInterface;
+use MattFerris\Application\Component\ComponentInterface;
 use MattFerris\Di\ContainerInterface;
-use MattFerris\Provider\ProviderInterface;
 
 class ApplicationTest extends \PHPUnit_Framework_TestCase
 {
