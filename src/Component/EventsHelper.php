@@ -14,14 +14,14 @@
 
 namespace MattFerris\Application\Component;
 
-use MattFerris\Events\EventDispatcherInterface;
+use MattFerris\Events\DispatcherInterface;
 use ReflectionClass;
 use RuntimeException;
 
-class EventsHelper
+class EventsHelper implements ComponentHelperInterface
 {
     /**
-     * @var MattFerris\Events\EventDispatcherInterface;
+     * @var MattFerris\Events\DispatcherInterface;
      */
     protected $dispatcher;
 
@@ -31,10 +31,10 @@ class EventsHelper
     protected $namespace;
 
     /**
-     * @param MattFerris\Events\EventDispatcherInterface
+     * @param MattFerris\Events\DispatcherInterface
      * @param string $namespace
      */
-    public function __construct(EventDispatcherInterface $dispatcher, $namespace = null)
+    public function __construct(DispatcherInterface $dispatcher, $namespace = null)
     {
         if (is_null($namespace)) {
             $namespace = (new ReflectionClass($this))->getNamespaceName();
@@ -47,7 +47,7 @@ class EventsHelper
     /**
      * @returns void
      */
-    public function help()
+    public function execute()
     {
         $class = $this->namespace."\\DomainEvents";
         if (class_exists($class)) {

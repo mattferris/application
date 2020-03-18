@@ -4,7 +4,7 @@
  * application - A PHP application loader
  * www.bueller.ca/application
  *
- * EventsLoggerHelper.php
+ * EventLoggerHelper.php
  * @copyright Copyright (c) 2016 Matt Ferris
  * @author Matt Ferris <matt@bueller.ca>
  *
@@ -12,12 +12,13 @@
  * www.bueller.ca/application/license
  */
 
-namespace MattFerris\Application;
+namespace MattFerris\Application\Component;
 
 use MattFerris\Logging\LoggerInterface;
 use ReflectionClass;
+use RuntimeException;
 
-class EventsLoggerHelper
+class EventLoggerHelper implements ComponentHelperInterface
 {
     /**
      * @var MattFerris\Logging\LoggerInterface
@@ -46,11 +47,13 @@ class EventsLoggerHelper
     /**
      * @returns void
      */
-    public function help()
+    public function execute()
     {
         $class = $this->namespace."\\DomainEventLoggerHelpers";
         if (class_exists($class)) {
             $class::addHelpers($this->logger);
+        } else {
+            throw new RuntimeException($class.' doesn\'t exist');
         }
     }
 }
